@@ -57,6 +57,32 @@ public class LyricsPromptTests
     {
         Assert.Contains("upbeat pop song", LyricsPrompt.BuildUserPrompt("", null));
     }
+
+    [Theory]
+    [InlineData(60, 8)]    // 60 / 7.5 = 8
+    [InlineData(90, 12)]   // 90 / 7.5 = 12
+    [InlineData(120, 16)]  // 120 / 7.5 = 16
+    [InlineData(180, 24)]  // 180 / 7.5 = 24
+    [InlineData(600, 48)]  // clamped to the maximum
+    [InlineData(10, 4)]    // clamped to the minimum
+    public void Verse_lines_scale_with_length(double seconds, int expected)
+    {
+        Assert.Equal(expected, LyricsPrompt.VerseLines(seconds));
+    }
+
+    [Fact]
+    public void Chorus_is_always_four_lines()
+    {
+        Assert.Equal(4, LyricsPrompt.ChorusLines);
+    }
+
+    [Fact]
+    public void User_prompt_states_the_requested_line_counts()
+    {
+        var p = LyricsPrompt.BuildUserPrompt("dreamy synth-pop", "Neon Nights", 12, 6);
+        Assert.Contains("about 12 short lines for the Verse", p);
+        Assert.Contains("about 6 for the Chorus", p);
+    }
 }
 
 public class TextAssistantRegistryTests

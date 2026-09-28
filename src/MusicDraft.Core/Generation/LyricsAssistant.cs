@@ -31,7 +31,10 @@ public sealed class LyricsAssistant : IAsyncDisposable
     /// <summary>
     /// Loads the model if needed and asks it for lyrics. Returns the raw reply text; the caller parses it.
     /// </summary>
-    public async Task<string> GenerateAsync(string systemPrompt, string userPrompt, CancellationToken ct)
+    /// <param name="seed">
+    /// Sampling seed. Pass a value to make a draft reproducible; pass null for a fresh random seed each call.
+    /// </param>
+    public async Task<string> GenerateAsync(string systemPrompt, string userPrompt, CancellationToken ct, uint? seed = null)
     {
         await _gate.WaitAsync(ct);
         try
@@ -50,8 +53,13 @@ public sealed class LyricsAssistant : IAsyncDisposable
             var executor = new StatelessExecutor(_model!, new ModelParams(_o.ModelPath) { ContextSize = 4096, GpuLayerCount = 0 });
             var inference = new InferenceParams
             {
-                MaxTokens = 700,
-                SamplingPipeline = new DefaultSamplingPipeline { Temperature = 0.9f, TopP = 0.95f },
+                MaxTokens = 1200,
+                SamplingPipeline = new DefaultSamplingPipeline
+                {
+                    Temperature = 0.9f,
+                    TopP = 0.95f,
+                    Seed = seed ?? (uint)Random.Shared.NextInt64(0, uint.MaxValue),
+                },
             };
             var sb = new System.Text.StringBuilder();
             await foreach (var token in executor.InferAsync(prompt, inference, ct))

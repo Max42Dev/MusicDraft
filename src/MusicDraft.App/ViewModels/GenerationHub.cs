@@ -255,11 +255,14 @@ public sealed partial class GenerationHub : ObservableObject, IAsyncDisposable
     private void CancelLyricsSetup() => _textSetupCts?.Cancel();
 
     /// <summary>Asks the local model for a verse and chorus matching the description. Throws on failure.</summary>
-    public async Task<(string Verse, string Chorus)> DraftLyricsAsync(string description, string? title, CancellationToken ct)
+    /// <param name="maxSeconds">Selected song length; the verse grows with it (about one line per 15 s).</param>
+    public async Task<(string Verse, string Chorus)> DraftLyricsAsync(string description, string? title, double maxSeconds, CancellationToken ct)
     {
         if (!LyricsAssistantReady)
             throw new BackendException("E_LYRICS_MISSING", "The lyrics assistant is still downloading. Try again in a moment.");
-        var reply = await _lyrics.GenerateAsync(LyricsPrompt.System, LyricsPrompt.BuildUserPrompt(description, title), ct);
+        var user = LyricsPrompt.BuildUserPrompt(description, title,
+            LyricsPrompt.VerseLines(maxSeconds), LyricsPrompt.ChorusLines);
+        var reply = await _lyrics.GenerateAsync(LyricsPrompt.System, user, ct);
         return LyricsPrompt.Parse(reply);
     }
 

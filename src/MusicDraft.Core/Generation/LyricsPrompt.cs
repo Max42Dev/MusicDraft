@@ -11,19 +11,30 @@ public static partial class LyricsPrompt
     public const string System =
         "You are a songwriter. Write short, singable, original lyrics in English. " +
         "Never explain, apologise or add notes. Reply with exactly two sections and nothing else: " +
-        "first a line that says Verse:, then four to six short lines; then a blank line; " +
-        "then a line that says Chorus:, then two to four short lines. " +
+        "first a line that says Verse:, then the verse lines; then a blank line; " +
+        "then a line that says Chorus:, then the chorus lines. " +
         "Do not use section tags like [Verse] or [Chorus], do not number the lines and do not add a title.";
 
+    /// <summary>Seconds of song per lyric line; the verse grows with the selected length.</summary>
+    public const double SecondsPerLine = 7.5;
+
+    /// <summary>Verse lines for a song of <paramref name="maxSeconds"/> seconds (about one line per 7.5 s).</summary>
+    public static int VerseLines(double maxSeconds) =>
+        Math.Clamp((int)Math.Round(maxSeconds / SecondsPerLine), 4, 48);
+
+    /// <summary>Chorus lines: always short and repeatable, regardless of song length.</summary>
+    public const int ChorusLines = 4;
+
     /// <summary>The user message: the song description (and optional title) the lyrics should match.</summary>
-    public static string BuildUserPrompt(string description, string? title)
+    public static string BuildUserPrompt(string description, string? title, int verseLines = 6, int chorusLines = 3)
     {
         var d = (description ?? "").Trim();
         var t = (title ?? "").Trim();
         var sb = new System.Text.StringBuilder();
         if (t.Length > 0) sb.Append("Song title: ").Append(t).Append('\n');
         sb.Append("Song description: ").Append(d.Length > 0 ? d : "an upbeat pop song");
-        sb.Append("\n\nWrite the Verse and Chorus for this song.");
+        sb.Append($"\n\nWrite the Verse and Chorus for this song. Use about {verseLines} short lines for the Verse " +
+                  $"and about {chorusLines} for the Chorus.");
         return sb.ToString();
     }
 

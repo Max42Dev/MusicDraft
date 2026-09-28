@@ -199,7 +199,7 @@ public sealed partial class CreateViewModel : ObservableObject
         LyricsDraftError = null;
         try
         {
-            var (verse, chorus) = await Hub.DraftLyricsAsync(prompt, Title, CancellationToken.None);
+            var (verse, chorus) = await Hub.DraftLyricsAsync(prompt, Title, MaxSeconds, CancellationToken.None);
             if (verse.Length > 0) Verse = verse;
             if (chorus.Length > 0) Chorus = chorus;
             if (verse.Length == 0 && chorus.Length == 0) LyricsDraftError = "The assistant returned no lyrics. Try again or write them yourself.";
