@@ -1,0 +1,99 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MusicDraft.App.ViewModels"
+        x:Class="MusicDraft.App.Views.SetupDialog"
+        x:DataType="vm:SetupViewModel"
+        Title="Set up music generation"
+        Width="760" Height="640" MinWidth="560" MinHeight="420"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Background="{DynamicResource ShellBackground}">
+    <Grid Margin="24">
+        <!-- 1. Consent: what, from where, how big, where to, which terms -->
+        <DockPanel IsVisible="{Binding ShowConsent}">
+            <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,12">
+                <TextBlock Text="{Binding Heading}" FontSize="20" FontWeight="SemiBold" />
+                <StackPanel Spacing="6" IsVisible="{Binding HasChoices}" Margin="0,0,0,6">
+                    <TextBlock TextWrapping="Wrap"
+                               Text="No music model is installed yet. Choose one to download so you can create songs. You can change it later in Settings." />
+                    <ComboBox ItemsSource="{Binding Options}" SelectedItem="{Binding SelectedOption}" MinWidth="420"
+                              AutomationProperties.Name="Model to install" />
+                    <TextBlock Text="{Binding OptionWarning}" TextWrapping="Wrap" Foreground="#D9822B"
+                               IsVisible="{Binding OptionWarning, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                </StackPanel>
+                <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding DiskText}" Classes="subtle" />
+                <TextBlock Text="Not enough free disk space. Free some space and try again." Foreground="#E0556A" IsVisible="{Binding DiskProblem}" />
+            </StackPanel>
+
+            <StackPanel DockPanel.Dock="Bottom" Spacing="12" Margin="0,12,0,0">
+                <TextBlock Text="{Binding Terms}" TextWrapping="Wrap" Classes="subtle" FontSize="12" />
+                <TextBlock Text="{Binding ProfileNote}" TextWrapping="Wrap" Classes="subtle" FontSize="12" />
+                <CheckBox IsChecked="{Binding Accepted}"
+                          Content="I have read the sources and license terms above and agree to download these files." />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                    <Button x:Name="StartButton" Classes="accent" Content="Download and install" IsEnabled="{Binding CanStart}"
+                            Command="{Binding InstallCommand}" />
+                    <Button Content="Not now" IsCancel="True" Click="OnClose" />
+                </StackPanel>
+            </StackPanel>
+
+            <ScrollViewer>
+                <ItemsControl ItemsSource="{Binding Rows}">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Spacing="10" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SetupRow">
+                            <Border Classes="card" Padding="14">
+                                <StackPanel Spacing="4">
+                                    <DockPanel>
+                                        <TextBlock DockPanel.Dock="Right" Text="{Binding Size}" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                    </DockPanel>
+                                    <TextBlock Text="{Binding State}" Classes="subtle" FontSize="12" />
+                                    <TextBlock FontSize="12" TextWrapping="Wrap"><Run Text="From: " /><Run Text="{Binding Source}" /></TextBlock>
+                                    <TextBlock FontSize="12" TextWrapping="Wrap"><Run Text="To: " /><Run Text="{Binding Destination}" /></TextBlock>
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center" MaxWidth="560"><Run Text="License: " /><Run Text="{Binding License}" /></TextBlock>
+                                        <Button Content="View" Padding="8,2" FontSize="12"
+                                                Command="{Binding $parent[Window].((vm:SetupViewModel)DataContext).OpenLinkCommand}"
+                                                CommandParameter="{Binding LicenseUrl}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </DockPanel>
+
+        <!-- 2. Progress: downloads run here, not on a separate screen -->
+        <StackPanel IsVisible="{Binding Started}" Spacing="12" VerticalAlignment="Center" MaxWidth="600">
+            <TextBlock Text="{Binding Plan.Profile.DisplayName, StringFormat='Installing {0}'}" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap" />
+
+            <StackPanel Spacing="6" IsVisible="{Binding Installing}">
+                <TextBlock Text="{Binding Hub.SetupStep}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                <ProgressBar Value="{Binding Hub.SetupFraction}" IsIndeterminate="{Binding Hub.SetupIndeterminate}" Maximum="100" Height="8"
+                             AutomationProperties.Name="Setup progress" />
+                <TextBlock Text="{Binding Hub.SetupDetail}" Classes="subtle" TextWrapping="Wrap" />
+                <TextBlock Classes="subtle" FontSize="12" TextWrapping="Wrap"
+                           Text="You can hide this window and keep listening to music; progress is also shown in Settings. Cancelled downloads resume where they stopped." />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                    <Button Content="Cancel download" Command="{Binding Hub.CancelSetupCommand}" />
+                    <Button Content="Hide" Click="OnClose" />
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Spacing="10" IsVisible="{Binding Succeeded}">
+                <TextBlock Text="Generation is set up. Open Create to make a song." TextWrapping="Wrap" />
+                <Button Classes="accent" Content="Done" HorizontalAlignment="Right" IsDefault="True" Click="OnClose" />
+            </StackPanel>
+
+            <StackPanel Spacing="10" IsVisible="{Binding FailedOrCancelled}">
+                <SelectableTextBlock Text="{Binding Hub.SetupError}" TextWrapping="Wrap" Foreground="#E0556A" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                    <Button Classes="accent" Content="Try again…" Command="{Binding RetryCommand}" />
+                    <Button Content="Close" Click="OnClose" />
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Window>

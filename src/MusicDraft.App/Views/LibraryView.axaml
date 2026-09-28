@@ -1,0 +1,157 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MusicDraft.App.ViewModels"
+             x:Class="MusicDraft.App.Views.LibraryView"
+             x:DataType="vm:LibraryViewModel">
+    <Grid ColumnDefinitions="220,20,*">
+        <!-- Left pane: All tracks + playlists -->
+        <DockPanel>
+            <TextBlock DockPanel.Dock="Top" Classes="h1" Text="Library" Margin="0,0,0,16" />
+            <Button DockPanel.Dock="Bottom" HorizontalAlignment="Stretch" Margin="0,10,0,0"
+                    Command="{Binding NewPlaylistCommand}" AutomationProperties.Name="New playlist">
+                <StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Classes="icon" FontSize="13" Text="&#xE710;" /><TextBlock Text="New playlist" /></StackPanel>
+            </Button>
+            <Border Classes="card" Padding="6">
+                <ListBox x:Name="SourceList" ItemsSource="{Binding Sources}" SelectedItem="{Binding SelectedSource}"
+                         Background="Transparent" AutomationProperties.Name="Library and playlists"
+                         DragDrop.AllowDrop="True" KeyDown="OnSourceKeyDown">
+                    <ListBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="New playlist…" Command="{Binding NewPlaylistCommand}" />
+                            <MenuItem Header="Rename playlist…" Command="{Binding RenamePlaylistCommand}" IsVisible="{Binding IsPlaylist}" InputGesture="F2" />
+                            <MenuItem Header="Delete playlist…" Command="{Binding DeletePlaylistCommand}" IsVisible="{Binding IsPlaylist}" InputGesture="Delete" />
+                        </ContextMenu>
+                    </ListBox.ContextMenu>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:LibrarySource">
+                            <StackPanel Orientation="Horizontal" Spacing="10" AutomationProperties.Name="{Binding Name}" Background="Transparent">
+                                <TextBlock Classes="icon" FontSize="13" Text="{Binding Glyph}" Width="16" />
+                                <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+        </DockPanel>
+
+        <!-- Main pane: tracks of the selected entry -->
+        <DockPanel Grid.Column="2">
+            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,16">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <TextBox Width="200" Text="{Binding Filter}" PlaceholderText="Search" AutomationProperties.Name="Search tracks" />
+                    <Button Classes="accent" Command="{Binding PlayAllCommand}" AutomationProperties.Name="Play all">
+                        <StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Classes="icon" FontSize="13" Text="&#xE768;" /><TextBlock Text="Play" /></StackPanel>
+                    </Button>
+                    <Button Content="Rename" Command="{Binding RenamePlaylistCommand}" IsVisible="{Binding IsPlaylist}"
+                            AutomationProperties.Name="Rename playlist" />
+                    <Button Content="Delete" Command="{Binding DeletePlaylistCommand}" IsVisible="{Binding IsPlaylist}"
+                            AutomationProperties.Name="Delete playlist" />
+                    <Button Command="{Binding AddFolderCommand}" Content="Add folder" IsVisible="{Binding IsAllTracks}" />
+                    <Button Command="{Binding AddFilesCommand}" AutomationProperties.Name="Add files" ToolTip.Tip="Add files (Ctrl+O)">
+                        <StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Classes="icon" FontSize="13" Text="&#xE710;" /><TextBlock Text="Add files" /></StackPanel>
+                    </Button>
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="{Binding Title}" FontSize="22" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Classes="subtle" Text="{Binding Summary}" />
+                </StackPanel>
+            </DockPanel>
+
+            <!-- Import progress -->
+            <Border DockPanel.Dock="Top" Classes="card" Padding="14,10" Margin="0,0,0,12" IsVisible="{Binding IsImporting}">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Content="Cancel" Command="{Binding CancelImportCommand}" />
+                    <StackPanel Spacing="6" Margin="0,0,12,0">
+                        <TextBlock Text="{Binding ImportStatus}" TextTrimming="CharacterEllipsis" />
+                        <ProgressBar IsIndeterminate="True" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <TextBlock DockPanel.Dock="Bottom" Classes="subtle" FontSize="12" Margin="4,8,0,0" TextWrapping="Wrap"
+                       IsVisible="{Binding IsPlaylist}"
+                       Text="Drag tracks from All tracks onto a playlist on the left (or drop files here). Alt+Up/Down or drag rows to reorder; Delete removes from the playlist." />
+
+            <Grid>
+                <!-- Empty library -->
+                <Border Classes="card" IsVisible="{Binding IsEmpty}" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="48,40">
+                    <StackPanel Spacing="10" HorizontalAlignment="Center">
+                        <TextBlock Classes="icon" FontSize="40" Text="&#xE8D6;" />
+                        <TextBlock Text="Your library is empty" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                        <TextBlock Classes="subtle" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="380"
+                                   Text="Drop MP3, WAV or FLAC files or folders here, or use Add files. Files stay where they are; MusicDraft only references them." />
+                        <Button Classes="accent" HorizontalAlignment="Center" Margin="0,8,0,0" Content="Add files" Command="{Binding AddFilesCommand}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Track list -->
+                <Border x:Name="DropZone" Classes="card" Padding="6" IsVisible="{Binding ShowList}" DragDrop.AllowDrop="True">
+                    <Grid>
+                        <TextBlock Classes="subtle" IsVisible="{Binding PlaylistEmpty}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   TextWrapping="Wrap" TextAlignment="Center"
+                                   Text="This playlist is empty.&#x0a;Drag tracks from All tracks onto it, or drop files here." />
+                        <TextBlock Classes="subtle" IsVisible="{Binding NoMatches}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Text="No tracks match your search." />
+                        <DockPanel IsVisible="{Binding !PlaylistEmpty}">
+                            <Grid DockPanel.Dock="Top" ColumnDefinitions="36,*,110,70" Margin="18,6,18,6">
+                                <TextBlock Grid.Column="0" Text="#" Classes="subtle" FontSize="11" IsVisible="{Binding IsPlaylist}" />
+                                <TextBlock Grid.Column="1" Text="TITLE" Classes="subtle" FontSize="11" />
+                                <TextBlock Grid.Column="2" Text="SOURCE" Classes="subtle" FontSize="11" />
+                                <TextBlock Grid.Column="3" Text="LENGTH" Classes="subtle" FontSize="11" HorizontalAlignment="Right" />
+                            </Grid>
+                            <ListBox x:Name="List" Classes="tracks" ItemsSource="{Binding Tracks}" SelectedItem="{Binding Selected}"
+                                     Background="Transparent" AutomationProperties.Name="Tracks"
+                                     DoubleTapped="OnDoubleTapped" KeyDown="OnKeyDown">
+                                <ListBox.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="Play from here" Command="{Binding PlayCommand}" InputGesture="Enter" />
+                                        <MenuItem Header="Add to queue" Command="{Binding EnqueueCommand}" />
+                                        <MenuItem Header="Add to playlist" ItemsSource="{Binding Playlists}">
+                                            <MenuItem.Styles>
+                                                <Style Selector="MenuItem > MenuItem" x:DataType="vm:PlaylistRef">
+                                                    <Setter Property="Header" Value="{Binding Name}" />
+                                                    <Setter Property="Command" Value="{Binding $parent[ListBox].((vm:LibraryViewModel)DataContext).AddToPlaylistCommand}" />
+                                                    <Setter Property="CommandParameter" Value="{Binding}" />
+                                                </Style>
+                                            </MenuItem.Styles>
+                                        </MenuItem>
+                                        <Separator IsVisible="{Binding IsPlaylist}" />
+                                        <MenuItem Header="Move up" Command="{Binding MoveUpCommand}" InputGesture="Alt+Up" IsVisible="{Binding IsPlaylist}" />
+                                        <MenuItem Header="Move down" Command="{Binding MoveDownCommand}" InputGesture="Alt+Down" IsVisible="{Binding IsPlaylist}" />
+                                        <MenuItem Header="Remove from playlist" Command="{Binding RemoveFromPlaylistCommand}" InputGesture="Delete" IsVisible="{Binding IsPlaylist}" />
+                                        <Separator />
+                                        <MenuItem Header="Rename…" Command="{Binding RenameCommand}" InputGesture="F2" />
+                                        <MenuItem Header="Show in folder" Command="{Binding ShowInFolderCommand}" />
+                                        <Separator />
+                                        <MenuItem Header="Remove from library" Command="{Binding RemoveFromLibraryCommand}" />
+                                        <MenuItem Header="Delete file from disk…" Command="{Binding DeleteFileCommand}" InputGesture="Shift+Delete" />
+                                    </ContextMenu>
+                                </ListBox.ContextMenu>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:TrackEntry">
+                                        <Grid ColumnDefinitions="36,*,110,70" AutomationProperties.Name="{Binding Item.AccessibleName}"
+                                              Background="Transparent" PointerPressed="OnRowPointerPressed">
+                                            <TextBlock Text="{Binding Number}" Classes="subtle" VerticalAlignment="Center"
+                                                       IsVisible="{Binding $parent[ListBox].((vm:LibraryViewModel)DataContext).IsPlaylist, FallbackValue=False}" />
+                                            <TextBlock Classes="icon" FontSize="12" Text="&#xE767;" IsVisible="{Binding IsCurrent}"
+                                                       Foreground="{DynamicResource SystemAccentColor}" HorizontalAlignment="Right" Margin="0,0,8,0" />
+                                            <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                                                <TextBlock Text="{Binding Item.Title}" TextTrimming="CharacterEllipsis" Classes.current="{Binding IsCurrent}" />
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <TextBlock Text="{Binding Item.StatusText}" IsVisible="{Binding Item.HasStatus}" FontSize="12" Foreground="#E0556A" />
+                                                    <TextBlock Text="{Binding Item.Path}" Classes="subtle" FontSize="12" TextTrimming="PrefixCharacterEllipsis" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="2" Text="{Binding Item.OriginText}" Classes="subtle" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="3" Text="{Binding Item.DurationText}" Classes="subtle" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </DockPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </DockPanel>
+    </Grid>
+</UserControl>

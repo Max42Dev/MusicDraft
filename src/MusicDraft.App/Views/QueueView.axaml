@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MusicDraft.App.ViewModels"
+             x:Class="MusicDraft.App.Views.QueueView"
+             x:DataType="vm:PlayerViewModel">
+    <DockPanel Margin="12,20,12,12">
+        <DockPanel DockPanel.Dock="Top" Margin="8,0,0,12">
+            <Button DockPanel.Dock="Right" Content="Clear" Command="{Binding ClearQueueCommand}" AutomationProperties.Name="Clear queue" />
+            <StackPanel>
+                <TextBlock Text="Queue" FontSize="18" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding QueueSummary}" Classes="subtle" FontSize="12" />
+            </StackPanel>
+        </DockPanel>
+        <TextBlock DockPanel.Dock="Bottom" Classes="subtle" FontSize="11" TextWrapping="Wrap" Margin="8,8,0,0"
+                   Text="Double-click to play. Delete removes. Alt+Up/Down reorders." />
+        <ListBox x:Name="List" Classes="tracks" ItemsSource="{Binding QueueEntries}" SelectedItem="{Binding SelectedQueueEntry}"
+                 Background="Transparent" AutomationProperties.Name="Play queue" DoubleTapped="OnDoubleTapped" KeyDown="OnKeyDown">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:TrackEntry">
+                    <Grid ColumnDefinitions="24,*,Auto" AutomationProperties.Name="{Binding Item.AccessibleName}">
+                        <TextBlock Text="{Binding Number}" Classes="subtle" FontSize="12" VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="{Binding Item.Title}" TextTrimming="CharacterEllipsis" Classes.current="{Binding IsCurrent}" />
+                            <TextBlock Text="{Binding Item.StatusText}" IsVisible="{Binding Item.HasStatus}" FontSize="11" Foreground="#E0556A" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" Text="{Binding Item.DurationText}" Classes="subtle" FontSize="12" VerticalAlignment="Center" />
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </DockPanel>
+</UserControl>

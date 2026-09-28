@@ -1,0 +1,75 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MusicDraft.App.ViewModels"
+             x:Class="MusicDraft.App.Views.TransportView"
+             x:DataType="vm:PlayerViewModel">
+    <Grid ColumnDefinitions="2*,3*,2*">
+        <!-- Now playing -->
+        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+            <Border Width="48" Height="48" CornerRadius="6" Background="{DynamicResource CardBackground}"
+                    BorderBrush="{DynamicResource Divider}" BorderThickness="1">
+                <TextBlock Classes="icon" FontSize="20" Text="&#xE8D6;" />
+            </Border>
+            <StackPanel VerticalAlignment="Center" MaxWidth="260">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                    <Border IsVisible="{Binding IsGenerated}" Background="{DynamicResource SystemAccentColor}" CornerRadius="4" Padding="5,0">
+                        <TextBlock Text="Generated" FontSize="11" Foreground="White" />
+                    </Border>
+                </StackPanel>
+                <TextBlock Text="{Binding Subtitle}" Classes="subtle" FontSize="12" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Controls + seek -->
+        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="6">
+                <Button Classes="transport" Classes.active="{Binding Shuffle}" Command="{Binding ToggleShuffleCommand}"
+                        AutomationProperties.Name="{Binding ShuffleLabel}" ToolTip.Tip="{Binding ShuffleLabel}">
+                    <TextBlock Classes="icon" Text="&#xE8B1;" />
+                </Button>
+                <Button Classes="transport" Command="{Binding PreviousCommand}"
+                        AutomationProperties.Name="Previous" ToolTip.Tip="Previous (Ctrl+Left)">
+                    <TextBlock Classes="icon" Text="&#xE892;" />
+                </Button>
+                <Button Classes="play accent" Command="{Binding PlayPauseCommand}"
+                        AutomationProperties.Name="{Binding PlayPauseLabel}" ToolTip.Tip="{Binding PlayPauseLabel}">
+                    <TextBlock Classes="icon" FontSize="18" Text="{Binding PlayPauseGlyph}" Foreground="White" />
+                </Button>
+                <Button Classes="transport" Command="{Binding NextCommand}"
+                        AutomationProperties.Name="Next" ToolTip.Tip="Next (Ctrl+Right)">
+                    <TextBlock Classes="icon" Text="&#xE893;" />
+                </Button>
+                <Button Classes="transport" Classes.active="{Binding RepeatActive}" Command="{Binding CycleRepeatCommand}"
+                        AutomationProperties.Name="{Binding RepeatLabel}" ToolTip.Tip="{Binding RepeatLabel}">
+                    <TextBlock Classes="icon" Text="{Binding RepeatGlyph}" />
+                </Button>
+            </StackPanel>
+            <Grid ColumnDefinitions="44,*,44">
+                <TextBlock Text="{Binding PositionText}" Classes="subtle" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                <Slider Grid.Column="1" Margin="8,-10" Minimum="0" Maximum="{Binding DurationSeconds}"
+                        Value="{Binding PositionSeconds}" IsEnabled="{Binding HasTrack}"
+                        SmallChange="5" LargeChange="15" AutomationProperties.Name="Seek" />
+                <TextBlock Grid.Column="2" Text="{Binding DurationText}" Classes="subtle" FontSize="12" VerticalAlignment="Center" />
+            </Grid>
+        </StackPanel>
+
+        <!-- Volume + queue -->
+        <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Spacing="4">
+            <Button Classes="transport" Command="{Binding ToggleMuteCommand}"
+                    AutomationProperties.Name="{Binding MuteLabel}" ToolTip.Tip="{Binding MuteLabel}">
+                <TextBlock Classes="icon" Text="{Binding VolumeGlyph}" />
+            </Button>
+            <Slider Width="120" Minimum="0" Maximum="100" Value="{Binding Volume}" SmallChange="2" LargeChange="10"
+                    VerticalAlignment="Center" AutomationProperties.Name="Volume" ToolTip.Tip="App volume (independent of Windows volume)" />
+            <Button Classes="transport" Width="NaN" Padding="10,0" Margin="8,0,0,0"
+                    Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).ToggleQueueCommand}"
+                    AutomationProperties.Name="Show queue" ToolTip.Tip="Queue (Ctrl+Q)">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Classes="icon" Text="&#xE90B;" />
+                    <TextBlock Text="{Binding QueueSummary}" FontSize="12" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+    </Grid>
+</UserControl>

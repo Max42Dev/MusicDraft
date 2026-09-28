@@ -1,0 +1,108 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MusicDraft.App.ViewModels"
+        xmlns:views="using:MusicDraft.App.Views"
+        x:Class="MusicDraft.App.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="MusicDraft"
+        Width="1180" Height="760" MinWidth="760" MinHeight="520"
+        Background="{DynamicResource ShellBackground}"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Ctrl+P" Command="{Binding Player.PlayPauseCommand}" />
+        <KeyBinding Gesture="MediaPlayPause" Command="{Binding Player.PlayPauseCommand}" />
+        <KeyBinding Gesture="MediaNextTrack" Command="{Binding Player.NextCommand}" />
+        <KeyBinding Gesture="MediaPreviousTrack" Command="{Binding Player.PreviousCommand}" />
+        <KeyBinding Gesture="Ctrl+Right" Command="{Binding Player.NextCommand}" />
+        <KeyBinding Gesture="Ctrl+Left" Command="{Binding Player.PreviousCommand}" />
+        <KeyBinding Gesture="Ctrl+Shift+Right" Command="{Binding Player.SeekByCommand}" CommandParameter="10" />
+        <KeyBinding Gesture="Ctrl+Shift+Left" Command="{Binding Player.SeekByCommand}" CommandParameter="-10" />
+        <KeyBinding Gesture="Ctrl+Up" Command="{Binding Player.VolumeByCommand}" CommandParameter="5" />
+        <KeyBinding Gesture="Ctrl+Down" Command="{Binding Player.VolumeByCommand}" CommandParameter="-5" />
+        <KeyBinding Gesture="Ctrl+M" Command="{Binding Player.ToggleMuteCommand}" />
+        <KeyBinding Gesture="Ctrl+S" Command="{Binding Player.ToggleShuffleCommand}" />
+        <KeyBinding Gesture="Ctrl+R" Command="{Binding Player.CycleRepeatCommand}" />
+        <KeyBinding Gesture="Ctrl+O" Command="{Binding Library.AddFilesCommand}" />
+        <KeyBinding Gesture="Ctrl+Q" Command="{Binding ToggleQueueCommand}" />
+    </Window.KeyBindings>
+
+    <Grid RowDefinitions="*,Auto">
+        <Grid ColumnDefinitions="220,*,Auto">
+            <!-- Navigation -->
+            <Border Background="{DynamicResource SidebarBackground}">
+                <DockPanel Margin="12,20,12,12">
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="10" Margin="10,0,0,24">
+                        <Border Width="30" Height="30" CornerRadius="8" Background="{DynamicResource SystemAccentColor}">
+                            <TextBlock Classes="icon" Text="&#xE8D6;" Foreground="White" />
+                        </Border>
+                        <TextBlock Text="MusicDraft" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <ListBox ItemsSource="{Binding Nav}" SelectedItem="{Binding SelectedNav}" Background="Transparent"
+                             AutomationProperties.Name="Navigation">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:NavItem">
+                                <StackPanel Orientation="Horizontal" Spacing="12" Margin="2,4"
+                                            AutomationProperties.Name="{Binding Label}">
+                                    <TextBlock Classes="icon" Text="{Binding Glyph}" Width="20" />
+                                    <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </Border>
+
+            <!-- Page -->
+            <ContentControl Grid.Column="1" Content="{Binding CurrentPage}" Margin="32,24,24,12">
+                <ContentControl.DataTemplates>
+                    <DataTemplate DataType="vm:LibraryViewModel"><views:LibraryView /></DataTemplate>
+                    <DataTemplate DataType="vm:SettingsViewModel"><views:SettingsView /></DataTemplate>
+                    <DataTemplate DataType="vm:CreateViewModel"><views:CreateView /></DataTemplate>
+                </ContentControl.DataTemplates>
+            </ContentControl>
+
+            <!-- Queue panel -->
+            <Border Grid.Column="2" Width="320" IsVisible="{Binding QueueOpen}" Background="{DynamicResource SidebarBackground}"
+                    BorderBrush="{DynamicResource Divider}" BorderThickness="1,0,0,0">
+                <views:QueueView DataContext="{Binding Player}" />
+            </Border>
+
+            <!-- Notifications -->
+            <ItemsControl Grid.Column="1" ItemsSource="{Binding Notices}" VerticalAlignment="Bottom" HorizontalAlignment="Right"
+                          Margin="0,0,24,16" MaxWidth="520">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><StackPanel Spacing="8" /></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:Notice">
+                        <Border CornerRadius="8" Padding="14,10" BoxShadow="0 4 16 0 #33000000"
+                                Background="{DynamicResource InfoBackground}"
+                                Classes.error="{Binding IsError}">
+                            <Border.Styles>
+                                <Style Selector="Border.error">
+                                    <Setter Property="Background" Value="{DynamicResource ErrorBackground}" />
+                                </Style>
+                            </Border.Styles>
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Classes="transport" Width="28" Height="28" Margin="8,0,0,0"
+                                        VerticalAlignment="Top"
+                                        Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).DismissNoticeCommand}"
+                                        CommandParameter="{Binding}" AutomationProperties.Name="Dismiss" ToolTip.Tip="Dismiss">
+                                    <TextBlock Classes="icon" Text="&#xE711;" FontSize="11" />
+                                </Button>
+                                <TextBlock Text="{Binding Text}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                            </DockPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
+
+        <!-- Transport -->
+        <Border Grid.Row="1" Background="{DynamicResource TransportBackground}" BorderBrush="{DynamicResource Divider}"
+                BorderThickness="0,1,0,0" Padding="16,10">
+            <views:TransportView DataContext="{Binding Player}" />
+        </Border>
+    </Grid>
+</Window>

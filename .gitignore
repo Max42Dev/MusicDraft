@@ -1,0 +1,51 @@
+# Build output
+bin/
+obj/
+TestResults/
+
+# IDE / editor
+.vs/
+.idea/
+*.user
+*.suo
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Downloaded models / weights (auto-fetched at runtime)
+*.gguf
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.onnx
+*.bin
+models/
+runtime/
+downloads/
+
+# Generated music / audio output
+*.mp3
+*.wav
+*.flac
+*.ogg
+*.m4a
+*.mp4
+*.webm
+output/
+generated/
+
+# Archives
+*.7z
+*.zip
+*.tar
+*.gz
+
+# Local databases / caches
+*.db
+*.sqlite
+*.sqlite3

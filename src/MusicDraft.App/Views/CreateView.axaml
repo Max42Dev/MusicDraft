@@ -1,0 +1,274 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MusicDraft.App.ViewModels"
+             x:Class="MusicDraft.App.Views.CreateView"
+             x:DataType="vm:CreateViewModel">
+    <Grid ColumnDefinitions="*,24,340">
+        <!-- Composer -->
+        <ScrollViewer>
+            <StackPanel Spacing="16" Margin="0,0,8,24">
+                <StackPanel>
+                    <TextBlock Classes="h1" Text="Create" />
+                    <TextBlock Classes="subtle" Text="Describe a song and MusicDraft composes it on your GPU." />
+                </StackPanel>
+
+                <!-- Readiness banner -->
+                <Border Background="{DynamicResource InfoBackground}" CornerRadius="8" Padding="14,10" IsVisible="{Binding !Hub.CanGenerate}">
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Classes="accent" Content="Set up generation" Command="{Binding GoToSettingsCommand}" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Classes="icon" Text="&#xE946;" />
+                            <TextBlock Text="{Binding Hub.ReadinessText}" TextWrapping="Wrap" VerticalAlignment="Center" MaxWidth="520" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <Border Classes="card">
+                    <StackPanel Spacing="14">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Describe the music" FontWeight="SemiBold" />
+                            <TextBox Text="{Binding Description}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="84" MaxLength="1000"
+                                     PlaceholderText="Genre, instruments, mood, tempo, vocal character — e.g. “dreamy synth-pop, analog pads, breathy female vocal, 100 BPM”"
+                                     AutomationProperties.Name="Music description" />
+                        </StackPanel>
+
+                        <Grid ColumnDefinitions="*,16,Auto">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Title (optional)" FontWeight="SemiBold" />
+                                <TextBox Text="{Binding Title}" PlaceholderText="Taken from the description if empty" MaxLength="80"
+                                         AutomationProperties.Name="Title" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Spacing="6">
+                                <TextBlock Text="Type" FontWeight="SemiBold" />
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <RadioButton GroupName="kind" Content="Vocals" IsChecked="{Binding !Instrumental}" />
+                                    <RadioButton GroupName="kind" Content="Instrumental" IsChecked="{Binding Instrumental}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Spacing="10" IsVisible="{Binding ShowLyrics}">
+                            <!-- Local lyrics assistant: writes a verse and chorus you can edit -->
+                            <Border Background="{DynamicResource InfoBackground}" CornerRadius="8" Padding="12,10">
+                                <StackPanel Spacing="8">
+                                    <DockPanel>
+                                        <TextBlock DockPanel.Dock="Right" Classes="subtle" FontSize="12" VerticalAlignment="Center" Text="On this PC" />
+                                        <TextBlock Text="Draft lyrics for me" FontWeight="SemiBold" />
+                                    </DockPanel>
+                                    <TextBlock Classes="subtle" FontSize="12" TextWrapping="Wrap"
+                                               Text="Describe the song in a few words and the local lyrics assistant writes a verse and chorus you can edit. Nothing is uploaded." />
+                                    <TextBox Text="{Binding LyricsPrompt}" MaxLength="300"
+                                             PlaceholderText="Short prompt — e.g. “summer road trip, hopeful, simple words”"
+                                             AutomationProperties.Name="Lyrics prompt" />
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Button Command="{Binding DraftLyricsCommand}" IsEnabled="{Binding CanDraftLyrics}"
+                                                AutomationProperties.Name="Draft lyrics">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBlock Classes="icon" Text="&#xE70F;" />
+                                                <TextBlock Text="{Binding DraftLyricsLabel}" />
+                                            </StackPanel>
+                                        </Button>
+                                        <TextBlock Classes="subtle" FontSize="12" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="360"
+                                                   Text="The assistant is downloading in the background; you can write the lyrics yourself meanwhile."
+                                                   IsVisible="{Binding !LyricsAssistantReady}" />
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding LyricsDraftError}" IsVisible="{Binding HasLyricsDraftError}" FontSize="12"
+                                               TextWrapping="Wrap" Foreground="#D9822B" AutomationProperties.LiveSetting="Polite" />
+                                </StackPanel>
+                            </Border>
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Verse" FontWeight="SemiBold" />
+                                <TextBox Text="{Binding Verse}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="110" MaxHeight="300"
+                                         MaxLength="{Binding MaxSectionChars}"
+                                         PlaceholderText="The verse lines, one per line"
+                                         AutomationProperties.Name="Verse lyrics" />
+                                <TextBlock Text="{Binding VerseHint}" IsVisible="{Binding HasVerseHint}" FontSize="12" TextWrapping="Wrap"
+                                           Foreground="#D9822B" AutomationProperties.LiveSetting="Polite" />
+                            </StackPanel>
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Chorus" FontWeight="SemiBold" />
+                                <TextBox Text="{Binding Chorus}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="110" MaxHeight="300"
+                                         MaxLength="{Binding MaxSectionChars}"
+                                         PlaceholderText="The chorus lines (the hook), one per line"
+                                         AutomationProperties.Name="Chorus lyrics" />
+                                <TextBlock Text="{Binding ChorusHint}" IsVisible="{Binding HasChorusHint}" FontSize="12" TextWrapping="Wrap"
+                                           Foreground="#D9822B" AutomationProperties.LiveSetting="Polite" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding TagsIgnoredHint}" IsVisible="{Binding HasTagsIgnoredHint}" Classes="subtle" FontSize="12" TextWrapping="Wrap" />
+                            <TextBlock Classes="subtle" FontSize="12" TextWrapping="Wrap"
+                                       Text="Both are required. The model sings exactly these words: the verse first, then the chorus." />
+                        </StackPanel>
+
+                        <!-- Melody from audio (optional): file or microphone -->
+                        <Border x:Name="MelodyDropZone" DragDrop.AllowDrop="True" BorderBrush="{DynamicResource Divider}" BorderThickness="1"
+                                CornerRadius="8" Padding="12" DataContext="{Binding Melody}" x:DataType="vm:MelodyReferenceViewModel">
+                            <StackPanel Spacing="8">
+                                <DockPanel>
+                                    <TextBlock Classes="subtle" FontSize="12" DockPanel.Dock="Right" VerticalAlignment="Center" Text="Optional" />
+                                    <TextBlock Text="Melody from audio" FontWeight="SemiBold" />
+                                </DockPanel>
+
+                                <!-- No reference yet -->
+                                <StackPanel Spacing="8" IsVisible="{Binding NoReference}">
+                                    <TextBlock Classes="subtle" FontSize="12" TextWrapping="Wrap"
+                                               Text="Hum, sing or play a tune, or drop an MP3, WAV, FLAC or M4A file here. Its melody is transcribed and a new song is made on it with your style and lyrics. The audio stays on this PC." />
+                                    <WrapPanel>
+                                        <Button Command="{Binding PickFileCommand}" Margin="0,0,8,0" AutomationProperties.Name="Choose audio file for the melody">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBlock Classes="icon" Text="&#xE8E5;" />
+                                                <TextBlock Text="Choose file…" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Command="{Binding RecordCommand}" IsEnabled="{Binding CanRecord}" AutomationProperties.Name="Record melody from microphone">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBlock Classes="icon" Text="&#xE720;" />
+                                                <TextBlock Text="Record" />
+                                            </StackPanel>
+                                        </Button>
+                                    </WrapPanel>
+                                </StackPanel>
+
+                                <!-- Recording -->
+                                <StackPanel Spacing="6" IsVisible="{Binding IsRecording}">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Ellipse Width="10" Height="10" Fill="#D13438" VerticalAlignment="Center" />
+                                        <TextBlock Text="Recording" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding ElapsedText}" FontWeight="SemiBold" VerticalAlignment="Center"
+                                                   AutomationProperties.Name="Recording time" />
+                                        <Button Command="{Binding StopRecordingCommand}" AutomationProperties.Name="Stop recording">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBlock Classes="icon" Text="&#xE71A;" />
+                                                <TextBlock Text="Stop" />
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                    <ProgressBar Value="{Binding Level}" Maximum="100" Height="6" MaxWidth="320" HorizontalAlignment="Left"
+                                                 AutomationProperties.Name="Microphone level" />
+                                    <TextBlock Classes="subtle" FontSize="12" TextWrapping="Wrap"
+                                               Text="Record at least 5 seconds. Only the first 20 seconds are needed; a longer take lets you choose where the excerpt starts." />
+                                </StackPanel>
+
+                                <TextBlock Text="Reading audio…" Classes="subtle" FontSize="12" IsVisible="{Binding IsProbing}" />
+
+                                <!-- Reference chosen -->
+                                <StackPanel Spacing="8" IsVisible="{Binding HasReference}">
+                                    <DockPanel>
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6">
+                                            <Button Command="{Binding TogglePreviewCommand}" AutomationProperties.Name="Preview reference audio">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <TextBlock Classes="icon" Text="{Binding PreviewGlyph}" />
+                                                    <TextBlock Text="{Binding PreviewLabel}" />
+                                                </StackPanel>
+                                            </Button>
+                                            <Button Content="Clear" Command="{Binding ClearCommand}" AutomationProperties.Name="Clear melody reference" />
+                                        </StackPanel>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding FileName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Classes="subtle" FontSize="12" Text="{Binding RangeText}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <CheckBox Content="Use the whole recording" IsChecked="{Binding WholeClip}" IsVisible="{Binding CanExcerpt}" />
+                                    <StackPanel Spacing="2" IsVisible="{Binding ShowStart}">
+                                        <TextBlock Text="Excerpt start" FontSize="12" />
+                                        <Slider Minimum="0" Maximum="{Binding MaxStart}" Value="{Binding Start}" SmallChange="0.5" LargeChange="5"
+                                                AutomationProperties.Name="Excerpt start in seconds" />
+                                    </StackPanel>
+                                    <TextBlock Classes="subtle" FontSize="12" TextWrapping="Wrap" Text="{Binding ExcerptHint}" />
+                                    <TextBlock Classes="subtle" FontSize="12" TextWrapping="Wrap"
+                                               Text="Only the melody is used, not the sound, words or mix. Use audio you have the right to use." />
+                                </StackPanel>
+
+                                <TextBlock Text="{Binding Message}" IsVisible="{Binding HasMessage}" FontSize="12" TextWrapping="Wrap"
+                                           Foreground="#D9822B" AutomationProperties.LiveSetting="Polite" />
+                            </StackPanel>
+                        </Border>
+                        <Border Background="{DynamicResource InfoBackground}" CornerRadius="8" Padding="12,8" IsVisible="{Binding NeedsTranscriptionSetup}">
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Content="Set up" Command="{Binding SetUpTranscriptionCommand}" Margin="8,0,0,0" />
+                                <TextBlock TextWrapping="Wrap" FontSize="12" VerticalAlignment="Center"
+                                           Text="Melody from audio needs the SheetSage2 transcription model (about 1.4 GB). You are asked before anything is downloaded." />
+                            </DockPanel>
+                        </Border>
+
+                        <StackPanel Spacing="4">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding LengthText}" FontWeight="SemiBold" />
+                                <TextBlock Text="Maximum length" FontWeight="SemiBold" />
+                            </DockPanel>
+                            <Slider Minimum="20" Maximum="180" Value="{Binding MaxSeconds}" SmallChange="5" LargeChange="15"
+                                    TickFrequency="10" AutomationProperties.Name="Maximum length in seconds" />
+                            <TextBlock Classes="subtle" FontSize="12" TextWrapping="Wrap" Text="{Binding LengthHint}" />
+                        </StackPanel>
+
+                        <Border Background="{DynamicResource ErrorBackground}" CornerRadius="8" Padding="12,8" IsVisible="{Binding HasErrors}">
+                            <TextBlock Text="{Binding ErrorText}" TextWrapping="Wrap" />
+                        </Border>
+
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Button Classes="accent" Padding="24,10" FontSize="15" Command="{Binding CreateCommand}" IsEnabled="{Binding CanCreate}"
+                                    AutomationProperties.Name="Create song" HotKey="Ctrl+Enter" ToolTip.Tip="Create (Ctrl+Enter)">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Classes="icon" Text="&#xE945;" Foreground="White" />
+                                    <TextBlock Text="Create" />
+                                </StackPanel>
+                            </Button>
+                            <TextBlock Text="{Binding Hub.ReadinessText}" Classes="subtle" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="420"
+                                       IsVisible="{Binding !Hub.IsGenerating}" />
+                            <TextBlock Text="Creating a song… Create is available again when it finishes or is cancelled." Classes="subtle"
+                                       VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="420" IsVisible="{Binding Hub.IsGenerating}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Current song: one generation at a time, progress / cancel / result inline -->
+        <StackPanel Grid.Column="2" Spacing="12" Margin="0,8,0,0">
+            <TextBlock Text="Your song" FontSize="18" FontWeight="SemiBold" />
+            <TextBlock Classes="subtle" TextWrapping="Wrap" Margin="4" IsVisible="{Binding Hub.Current, Converter={x:Static ObjectConverters.IsNull}}"
+                       Text="Press Create and the song's progress and result appear here. One song is created at a time." />
+            <ContentControl Content="{Binding Hub.Current}" IsVisible="{Binding Hub.Current, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <ContentControl.ContentTemplate>
+                    <DataTemplate x:DataType="vm:CurrentGeneration">
+                        <Border Classes="card" Padding="14">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding StatusText}" Classes="subtle" FontSize="12" TextWrapping="Wrap"
+                                           AutomationProperties.LiveSetting="Polite" AutomationProperties.Name="Generation status" />
+                                <StackPanel Spacing="6" IsVisible="{Binding IsRunning}">
+                                    <ProgressBar Value="{Binding Fraction}" Maximum="100" IsIndeterminate="{Binding Indeterminate}" Height="6"
+                                                 AutomationProperties.Name="Generation progress" />
+                                    <TextBlock Text="{Binding Message}" Classes="subtle" FontSize="12" TextWrapping="Wrap"
+                                               IsVisible="{Binding Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                    <Button Content="Cancel" Command="{Binding $parent[UserControl].((vm:CreateViewModel)DataContext).Hub.CancelGenerationCommand}"
+                                            HorizontalAlignment="Left" AutomationProperties.Name="Cancel generation" />
+                                </StackPanel>
+
+                                <!-- Result -->
+                                <StackPanel Spacing="6" IsVisible="{Binding IsSucceeded}">
+                                    <TextBlock Text="{Binding ResultText}" FontSize="12" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding WarningsText}" FontSize="12" TextWrapping="Wrap" Foreground="#D9822B" IsVisible="{Binding HasWarnings}" />
+                                    <WrapPanel>
+                                        <Button Content="Play" Classes="accent" Command="{Binding PlayCommand}" Margin="0,0,6,6" />
+                                        <Button Content="Open in library" Command="{Binding ShowInLibraryCommand}" Margin="0,0,6,6" />
+                                        <Button Content="Show file" Command="{Binding ShowFileCommand}" Margin="0,0,6,6" />
+                                    </WrapPanel>
+                                </StackPanel>
+
+                                <!-- Error for the current generation -->
+                                <Border Background="{DynamicResource ErrorBackground}" CornerRadius="6" Padding="10,8" IsVisible="{Binding IsFailed}">
+                                    <SelectableTextBlock Text="{Binding Message}" FontSize="12" TextWrapping="Wrap" />
+                                </Border>
+                                <TextBlock Text="{Binding Message}" Classes="subtle" FontSize="12" TextWrapping="Wrap" IsVisible="{Binding IsCancelled}" />
+
+                                <Button Content="Details" Command="{Binding ShowDetailsCommand}" HorizontalAlignment="Left" Padding="8,2" FontSize="12"
+                                        IsVisible="{Binding !IsRunning}"
+                                        ToolTip.Tip="Open the folder with the score, settings, graph and engine log" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ContentControl.ContentTemplate>
+            </ContentControl>
+        </StackPanel>
+    </Grid>
+</UserControl>

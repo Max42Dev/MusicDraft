@@ -1,0 +1,21 @@
+# Architecture and native-Windows feasibility
+
+## Proposed components (subject to the spike)
+
+- **Desktop shell:** Windows app with a modern, accessible interface. Candidate: .NET 8/9 + WinUI 3 or Avalonia; choose after testing packaging, drag/drop, media APIs and one-EXE expectations. Do not lock in a web runtime just for appearance.
+- **Playback/catalog:** independent Windows audio playback adapter, persisted SQLite catalog (tracks, playlists, play queue, settings, and a generation record per created song for provenance) and per-user app-data directories; never store model/audio blobs in the EXE or alongside the installed binary.
+- **Inference worker:** primary candidate is a pinned, **headless local ComfyUI** runtime with native YuE2 and SheetSage2 nodes, driven by a MusicDraft adapter that accepts typed `generate`/`transcribe`/`cancel`/`status` requests and turns them into API-compatible graphs. Keep ComfyUI invisible to normal users; our app owns the GUI, jobs and file catalog. Run it as a supervised subprocess, restricted to loopback or IPC, never an externally reachable unauthenticated HTTP port. Bundle/install its pinned Windows Python/CUDA runtime only after a working spike. Keep worker restartable and hide its internal graph syntax behind a versioned interface.
+- **Optional lyric worker:** a *different* small text model via a validated Windows local text backend (llama.cpp/Ollama, if selected). Isolate its model size, prompt and license from YuE2.
+
+## Mandatory feasibility gate before full application build
+
+On a clean Windows machine with NVIDIA GPU, run a pinned build of ComfyUI's [official text workflow](https://github.com/Comfy-Org/workflow_templates/blob/main/templates/audio_yue2_text2music.json) using [Comfy-Org's int8 checkpoint](https://huggingface.co/Comfy-Org/YuE2), with no Comfy web UI visible: short prompt -> score/music conditioning -> `KSampler` -> `VAEDecodeAudio` (or tiled decode) -> playable FLAC. Then run the [official cover workflow](https://github.com/Comfy-Org/workflow_templates/blob/main/templates/audio_yue2_music_cover.json): MP3 -> `SheetSage2AudioToABC` -> YuE2 -> playable FLAC. Record actual versions, dependencies, peak VRAM and errors. Test how to submit *API prompt* graphs programmatically (templates may contain UI-only subgraphs), collect output/progress and cancel jobs; do not assume the UI JSON itself is directly an API request. Test short and long/tiled decode, seed and maximum duration. ComfyUI's native SheetSage2 encoder may avoid the official standalone SheetSage2's separate Python environment; verify on Windows rather than assuming.
+
+If ComfyUI integration fails, prototype a native Windows port of the **official Python YuE2 pipeline** as an alternative. ComfyUI's combined checkpoint is not interchangeable with YuE2 `from_pretrained` files. If neither works, stop and seek owner approval for a different runtime or scope; do not quietly require WSL2, Docker or a cloud account. Reusing ComfyUI's implementation under its actual licenses is preferred to rewriting acoustic/decoder internals from scratch.
+
+## Worker protocol and safety
+
+- Requests carry job ID, mode, validated request/settings, local model identity/revision and user-approved output directory. Events carry stage, timestamps, progress units, warnings and structured error codes. Use explicit schema version and sanitize paths; prohibit arbitrary command strings.
+- Worker writes to a unique temporary job directory and atomically promotes completed output/manifest; cancel/kill leaves an inspectable failure record but never a fake finished track. A song still being created when the app closes is marked Interrupted on the next start (no resume).
+- **One generation at a time, no queue** (decided 2026-09-27). `GenerationService.Start` rejects new work while a song is being created; the UI disables Create instead of queueing. `Cancel()` stops the current song. Model downloads are likewise a single setup run (`GenerationHub.RunSetupAsync`), not a download queue. Handle out-of-disk, missing driver, corrupt cache, OOM, disconnect, source decode/transcription failures and unresponsive subprocess.
+- Use per-user directories, e.g. `%LOCALAPPDATA%/MusicDraft/models`, `.../runtime`, `.../jobs`; let user relocate cache/output via settings without corrupting references.
