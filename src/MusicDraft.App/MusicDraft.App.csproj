@@ -25,4 +25,16 @@
   <ItemGroup>
     <ProjectReference Include="..\MusicDraft.Core\MusicDraft.Core.csproj" />
   </ItemGroup>
+
+  <!-- SkiaSharp/HarfBuzzSharp ship ~100 MB of native .pdb files that DebugType does not strip,
+       and LLamaSharp ships native llama.cpp binaries for Linux/macOS (~73 MB) that a Windows
+       installer never needs. Remove both from the publish output. -->
+  <Target Name="TrimPublishOutput" AfterTargets="Publish">
+    <ItemGroup>
+      <PdbsToDelete Include="$(PublishDir)**\*.pdb" />
+      <ForeignNativesToDelete Include="$(PublishDir)runtimes\linux*\**\*;$(PublishDir)runtimes\osx*\**\*" />
+    </ItemGroup>
+    <Delete Files="@(PdbsToDelete)" />
+    <RemoveDir Directories="$(PublishDir)runtimes\linux-x64;$(PublishDir)runtimes\linux-arm64;$(PublishDir)runtimes\linux-musl-x64;$(PublishDir)runtimes\osx-x64;$(PublishDir)runtimes\osx-arm64" />
+  </Target>
 </Project>

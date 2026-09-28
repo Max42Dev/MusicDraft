@@ -1,0 +1,19 @@
+<Project>
+
+  <!--
+    Shared product metadata for every project. Keep this file free of RuntimeIdentifier /
+    SelfContained / PublishSingleFile: those are publish-only concerns and are supplied by the
+    publish profile (src/MusicDraft.App/Properties/PublishProfiles/win-x64.pubxml) or the
+    release workflow, so that `dotnet build` and `dotnet test` stay RID-agnostic.
+  -->
+  <PropertyGroup>
+    <Version>0.1.0</Version>
+    <Product>MusicDraft</Product>
+    <Company>MusicDraft</Company>
+    <Authors>MusicDraft contributors</Authors>
+    <Copyright>Copyright (c) MusicDraft contributors</Copyright>
+    <RepositoryUrl>https://github.com/Max42Dev/MusicDraft</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+</Project>

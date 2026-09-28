@@ -3,6 +3,10 @@ bin/
 obj/
 TestResults/
 
+# Publish / installer output
+publish/
+artifacts/
+
 # IDE / editor
 .vs/
 .idea/
