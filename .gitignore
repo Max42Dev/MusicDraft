@@ -21,6 +21,8 @@ __pycache__/
 venv/
 
 # Downloaded models / weights (auto-fetched at runtime)
+# NOTE: leading slash anchors these to the repo root. Without it, "models/" and "downloads/"
+# also match the source folders src/MusicDraft.Core/Models/ and src/MusicDraft.Core/Downloads/.
 *.gguf
 *.safetensors
 *.ckpt
@@ -28,9 +30,9 @@ venv/
 *.pth
 *.onnx
 *.bin
-models/
-runtime/
-downloads/
+/models/
+/runtime/
+/downloads/
 
 # Generated music / audio output
 *.mp3
@@ -40,8 +42,8 @@ downloads/
 *.m4a
 *.mp4
 *.webm
-output/
-generated/
+/output/
+/generated/
 
 # Archives
 *.7z

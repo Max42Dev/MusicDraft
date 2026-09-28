@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 1,
+  "runtimes": [
+    {
+      "id": "comfyui-0.37.0-nvidia",
+      "displayName": "ComfyUI 0.37.0 portable (NVIDIA, PyTorch 2.13 + CUDA 13.0, embedded Python 3.13)",
+      "url": "https://github.com/Comfy-Org/ComfyUI/releases/download/v0.37.0/ComfyUI_windows_portable_nvidia.7z",
+      "fileName": "ComfyUI_windows_portable_nvidia.7z",
+      "sizeBytes": 1925204508,
+      "sha256": "7805f634fab51f63a238aaf0cfe2a9833bb7c86ddfc8400a60919f44460d7d65",
+      "extractedBytes": 4185588121,
+      "installDir": "comfyui-0.37.0",
+      "archiveRoot": "ComfyUI_windows_portable",
+      "pythonRelativePath": "python_embeded\\python.exe",
+      "mainRelativePath": "ComfyUI\\main.py",
+      "license": "GPL-3.0 (ComfyUI) plus bundled PyTorch/CUDA/Python component licenses",
+      "licenseUrl": "https://github.com/Comfy-Org/ComfyUI/blob/v0.37.0/LICENSE",
+      "sourceUrl": "https://github.com/Comfy-Org/ComfyUI/releases/tag/v0.37.0",
+      "requiresNvidia": true,
+      "version": "0.37.0",
+      "extractor": {
+        "displayName": "7-Zip 26.03 console extractor (7zr.exe)",
+        "url": "https://github.com/ip7z/7zip/releases/download/26.03/7zr.exe",
+        "fileName": "7zr.exe",
+        "sizeBytes": 602624,
+        "sha256": "ad4c82fadcbdf93c03b4fc440f300509c7d60c5c2f4d183e35d9d70d6957037d",
+        "license": "7zr.exe is public domain (7-Zip is otherwise LGPL-2.1)",
+        "licenseUrl": "https://www.7-zip.org/license.txt"
+      }
+    }
+  ],
+  "files": [
+    {
+      "id": "gemma4-e2b-q4",
+      "displayName": "Gemma 4 E2B Q4_0 (local lyrics assistant)",
+      "repo": "ggml-org/gemma-4-E2B-it-GGUF",
+      "revision": "b4243c156154b6dca9324415f8c7ccc098b4aed1",
+      "path": "gemma-4-E2B-it-Q4_0.gguf",
+      "sizeBytes": 2841481184,
+      "sha256": "8e30dff3ac4c8434c49a7036fa15564bdbb6044e42bf04550bf1a096ad7e6a52"
+    },
+    {
+      "id": "yue2-int8-checkpoint",
+      "displayName": "YuE2 3B int8 (ComfyUI combined model + text encoder + audio VAE)",
+      "repo": "Comfy-Org/YuE2",
+      "revision": "2f76ca75e6ee094169de899cc7fc99d6887e2196",
+      "path": "checkpoints/yue2_3b_int8_convrot.safetensors",
+      "sizeBytes": 3960938800,
+      "sha256": "96fe199377309001ed8cd26a944baeee8cc31a20ba7c36d1d3c0a7e1f4149db6"
+    },
+    {
+      "id": "yue2-bf16-checkpoint",
+      "displayName": "YuE2 3B bf16 (ComfyUI combined model + text encoder + audio VAE)",
+      "repo": "Comfy-Org/YuE2",
+      "revision": "2f76ca75e6ee094169de899cc7fc99d6887e2196",
+      "path": "checkpoints/yue2_3b_bf16.safetensors",
+      "sizeBytes": 7799983228,
+      "sha256": "33765adbf9813c9a50318218760b2fd819a319862460a04884607581961c6fee"
+    },
+    {
+      "id": "sheetsage2-encoder",
+      "displayName": "SheetSage2 bf16 audio-to-score encoder (includes its MERT front end)",
+      "repo": "Comfy-Org/YuE2",
+      "revision": "2f76ca75e6ee094169de899cc7fc99d6887e2196",
+      "path": "audio_encoders/sheetsage2_bf16.safetensors",
+      "sizeBytes": 1386868122,
+      "sha256": "5fd960ce3df281e3f3a889d174584d88f96247711480cf96377b12d7e8b6adc5"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "yue2-int8-4gb",
+      "displayName": "YuE2 int8 – low-memory (4 GB class)",
+      "vramClass": 4,
+      "minVramGb": 4,
+      "minRamGb": 16,
+      "status": "experimental",
+      "statusNote": "Passed text and whole-song cover smoke tests under a hard 3.5 GB PyTorch VRAM cap on a 24 GB NVIDIA L4. CUDA context and desktop use ~0.6 GB on top, so real 4 GB cards are marginal. Not yet run on a physical 4 GB GPU.",
+      "runtime": "comfyui-0.37.0-nvidia",
+      "generatorFile": "yue2-int8-checkpoint",
+      "coverFile": "sheetsage2-encoder",
+      "workerFlags": [ "--reserve-vram", "0.6" ],
+      "forceTiledDecode": true,
+      "license": "CC BY-NC 4.0 with an additional permission for individual creators to monetise outputs; no company-commercial use or weight redistribution",
+      "licenseUrl": "https://github.com/multimodal-art-projection/YuE/blob/main/MODEL_LICENSE"
+    },
+    {
+      "id": "yue2-int8-8gb",
+      "displayName": "YuE2 int8 – standard (8 GB class)",
+      "vramClass": 8,
+      "minVramGb": 7.5,
+      "minRamGb": 16,
+      "status": "supported",
+      "statusNote": "Passed text, instrumental and cover smoke tests (unrestricted and under a hard 7.5 GB PyTorch cap). Peak whole-GPU use 4.8-6.6 GB.",
+      "runtime": "comfyui-0.37.0-nvidia",
+      "generatorFile": "yue2-int8-checkpoint",
+      "coverFile": "sheetsage2-encoder",
+      "workerFlags": [],
+      "forceTiledDecode": true,
+      "license": "CC BY-NC 4.0 with an additional permission for individual creators to monetise outputs; no company-commercial use or weight redistribution",
+      "licenseUrl": "https://github.com/multimodal-art-projection/YuE/blob/main/MODEL_LICENSE"
+    },
+    {
+      "id": "yue2-bf16-16gb",
+      "displayName": "YuE2 bf16 – full precision (16 GB class)",
+      "vramClass": 16,
+      "minVramGb": 15,
+      "minRamGb": 16,
+      "status": "supported",
+      "statusNote": "Passed a text-to-FLAC smoke test on a 24 GB NVIDIA L4 with 16 GB RAM (peak whole-GPU use 5.8 GB with ComfyUI dynamic VRAM). Not tested on a physical 16 GB card.",
+      "runtime": "comfyui-0.37.0-nvidia",
+      "generatorFile": "yue2-bf16-checkpoint",
+      "coverFile": "sheetsage2-encoder",
+      "workerFlags": [],
+      "forceTiledDecode": false,
+      "license": "CC BY-NC 4.0 with an additional permission for individual creators to monetise outputs; no company-commercial use or weight redistribution",
+      "licenseUrl": "https://github.com/multimodal-art-projection/YuE/blob/main/MODEL_LICENSE"
+    }
+  ],
+  "textAssistant": {
+    "runtime": "",
+    "modelFile": "gemma4-e2b-q4",
+    "displayName": "Gemma 4 E2B Q4_0 lyrics assistant",
+    "license": "Gemma Terms of Use (Google)",
+    "licenseUrl": "https://ai.google.dev/gemma/terms",
+    "sourceUrl": "https://huggingface.co/ggml-org/gemma-4-E2B-it-GGUF"
+  }
+}
